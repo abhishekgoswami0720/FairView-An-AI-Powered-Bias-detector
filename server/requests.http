@@ -1,0 +1,87 @@
+### FairView API - try the whole flow by hand.
+### Works with the "REST Client" extension in VS Code: click "Send Request" above each block.
+### Run `npm run seed` first. After each login, copy the token into the matching variable below.
+
+@base = http://localhost:5000/api
+@clientToken = paste-client-token-here
+@managerToken = paste-manager-token-here
+@employeeToken = paste-employee-token-here
+
+### 1. Log in as the client
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "client@fairview.test", "password": "password123" }
+
+### 2. Find the manager's id
+GET {{base}}/users?role=manager
+Authorization: Bearer {{clientToken}}
+
+### 3. Client creates a project (put the manager's id in)
+POST {{base}}/projects
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{ "title": "Company website", "description": "5-page site", "managerId": "PASTE_MANAGER_ID" }
+
+### 4. Log in as the manager
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "manager@fairview.test", "password": "password123" }
+
+### 5. Find employee ids
+GET {{base}}/users?role=employee
+Authorization: Bearer {{managerToken}}
+
+### 6. Manager gives Priya 70% of the project
+POST {{base}}/tasks
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{ "projectId": "PASTE_PROJECT_ID", "employeeId": "PASTE_PRIYA_ID", "title": "Build pages", "workShare": 0.7 }
+
+### 7. Log in as Priya
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "priya@fairview.test", "password": "password123" }
+
+### 8. Priya starts, then submits (send twice: first in_progress, then submitted)
+PATCH {{base}}/tasks/PASTE_TASK_ID/status
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{ "status": "in_progress" }
+
+###
+PATCH {{base}}/tasks/PASTE_TASK_ID/status
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{ "status": "submitted", "submission": "https://github.com/example/pages" }
+
+### 9. Manager rates Priya's task (BEFORE delivery - blind to the client's score)
+POST {{base}}/assessments
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{ "taskId": "PASTE_TASK_ID", "score": 5, "feedback": "Okay work" }
+
+### 10. Manager delivers the project
+POST {{base}}/projects/PASTE_PROJECT_ID/deliver
+Authorization: Bearer {{managerToken}}
+
+### 11. Client rates the project - this locks it
+POST {{base}}/ratings
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{ "projectId": "PASTE_PROJECT_ID", "score": 9, "review": "Excellent, on time" }
+
+### 12. THE TEST: manager tries to change the client rating -> must be 403
+PATCH {{base}}/ratings/PASTE_RATING_ID
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{ "score": 3 }
