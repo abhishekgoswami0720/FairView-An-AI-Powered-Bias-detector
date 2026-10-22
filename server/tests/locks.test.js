@@ -43,12 +43,12 @@ describe.each(Object.entries(LOCKED_MODELS))('%s is write-once', (name, Model) =
 describe('Rating scores', () => {
   const valid = { project: '64b000000000000000000001', client: '64a000000000000000000001' };
 
-  test.each([1, 7, 10])('score %d is accepted', (score) => {
-    expect(new ClientRating({ ...valid, score }).validateSync()).toBeUndefined();
+  test.each([1, 7, 10])('score %d is accepted', async (score) => {
+    await expect(new ClientRating({ ...valid, score }).validate()).resolves.toBeUndefined();
   });
 
-  test.each([0, 11, 7.5, -3])('score %d is rejected', (score) => {
-    expect(new ClientRating({ ...valid, score }).validateSync()).toBeDefined();
+  test.each([0, 11, 7.5, -3])('score %d is rejected', async (score) => {
+    await expect(new ClientRating({ ...valid, score }).validate()).rejects.toThrow();
   });
 });
 
@@ -60,11 +60,11 @@ describe('Task work share', () => {
     expect(task.workShare).toBe(0.4);
   });
 
-  test.each([0, 1.5])('work share %d is rejected', (workShare) => {
+  test.each([0, 1.5])('work share %d is rejected', async (workShare) => {
     const task = new Task({
       project: '64b000000000000000000001', manager: '64a000000000000000000003',
       employee: '64a000000000000000000005', title: 'x', workShare,
     });
-    expect(task.validateSync()).toBeDefined();
+    await expect(task.validate()).rejects.toThrow();
   });
 });
