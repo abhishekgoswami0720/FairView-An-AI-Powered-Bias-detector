@@ -53,6 +53,8 @@ See [server/README.md](server/README.md).
 - The client rates a whole project, so per-employee comparison uses the work share and is an approximation.
 - The ML module will be tested on synthetic data, which shows the method works but not how it performs on real company data.
 
-## Synopsis
+## Project docs
 
-[docs/FairView_Project_Synopsis.pdf](docs/FairView_Project_Synopsis.pdf)
+- [Decision.md](Decision.md): every design decision, why it was made, and what was given up for it
+- [flow.md](flow.md): how the code runs, from `npm start` to the reply, and which function calls which
+- [docs/FairView_Project_Synopsis.pdf](docs/FairView_Project_Synopsis.pdf): project synopsis

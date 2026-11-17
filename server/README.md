@@ -89,3 +89,5 @@ src/
   scripts/seed.js     demo accounts
 tests/                Jest + Supertest tests
 ```
+
+How a request moves through these files: [../flow.md](../flow.md). Why the code is built this way: [../Decision.md](../Decision.md).
