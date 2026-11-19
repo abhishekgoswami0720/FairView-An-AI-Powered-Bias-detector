@@ -7,7 +7,6 @@ import { useApi } from '../lib/useApi';
 import { date, STAR_WORDS } from '../lib/format';
 import { StarInput } from '../components/Stars';
 import { Button, Loading, Notice, Textarea } from '../components/ui';
-import { Logo } from '../components/Layout';
 
 const CLOSED = {
   used: ['Already rated', 'This piece of work has already been rated. Thank you.'],
@@ -19,10 +18,7 @@ function Frame({ children }) {
   return (
     <div className="flex min-h-screen flex-col px-4 py-8 sm:items-center sm:justify-center">
       <div className="w-full max-w-md sm:rounded-panel sm:border sm:border-rule sm:bg-surface sm:p-8">{children}</div>
-      <p className="mt-8 flex items-center justify-center gap-2 text-sm text-muted">
-        <Logo className="text-base" />
-        <span>keeps every rating exactly as it was given.</span>
-      </p>
+      <p className="mt-8 text-center text-sm text-muted">FairView keeps every rating exactly as it was given.</p>
     </div>
   );
 }
