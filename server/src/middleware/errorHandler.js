@@ -10,9 +10,16 @@ function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: `Invalid ${err.path}.` });
   }
   if (err.code === 11000) {
-    return res.status(409).json({ error: 'This already exists.' });
+    const field = Object.keys(err.keyPattern || {})[0];
+    return res.status(409).json({ error: field === 'email' ? 'An account with this email already exists.' : 'This already exists.' });
   }
-  if (err.status) {
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'The request body is not valid JSON.' });
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'The request is too large.' });
+  }
+  if (err.status && err.status < 500) {
     return res.status(err.status).json({ error: err.message });
   }
   console.error(err);

@@ -1,0 +1,54 @@
+@import "@fontsource/atkinson-hyperlegible-next/400.css";
+@import "@fontsource/atkinson-hyperlegible-next/600.css";
+@import "@fontsource/atkinson-hyperlegible-next/700.css";
+@import "@fontsource/atkinson-hyperlegible-next/800.css";
+@import "tailwindcss";
+
+/* FairView tokens. Two inks carry the product's idea:
+   the manager's mark (indigo, a square) and the client's mark (teal, a ring). */
+@theme {
+  --color-paper: #f2f4f1;
+  --color-surface: #ffffff;
+  --color-ink: #1b2430;
+  --color-muted: #5b6573;
+  --color-rule: #d8ddd6;
+  --color-mgr: #3d4fb8;
+  --color-mgr-soft: #e3e6f7;
+  --color-cli: #0e8a72;
+  --color-cli-soft: #dcf1ec;
+  --color-look: #9a6412;
+  --color-look-soft: #f8ecd4;
+  --color-bad: #b42318;
+  --color-bad-soft: #fde8e6;
+
+  --font-sans: "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, sans-serif;
+  --radius-control: 0.5rem;
+  --radius-panel: 0.75rem;
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-mgr);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* The one moment of motion: a rating settling into place after it is saved. */
+@keyframes settle {
+  from { transform: scale(1.18); opacity: 0.4; }
+  to { transform: scale(1); opacity: 1; }
+}
+.settle { animation: settle 420ms cubic-bezier(.2,.8,.2,1) both; }

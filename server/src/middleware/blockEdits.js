@@ -1,11 +1,10 @@
-const audit = require('../utils/audit');
+const { auditBy } = require('../utils/audit');
 
 // For locked records (ratings): any attempt to edit or delete is refused with 403
 // AND written to the audit log, so HR can see who tried.
 function blockEdits(entity) {
   return async (req, res) => {
-    await audit({
-      actor: req.user.id,
+    await auditBy(req, {
       action: `${entity}.${req.method.toLowerCase()}`,
       entity,
       entityId: req.params.id,

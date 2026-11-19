@@ -1,95 +1,117 @@
-# FairView API: full flow, one click at a time.
+# FairView API: the full loop, one click at a time.
 # Use with the VS Code "REST Client" extension. Click "Send Request" above each block, top to bottom.
-# Tokens and ids are taken automatically from earlier responses, nothing needs to be copied.
-# Run `npm run seed` once before starting, and keep `npm run dev` running.
+# Tokens and ids are taken from earlier replies automatically: nothing needs to be copied.
+#
+# Before you start:
+#   1. npm run seed -- --reset      (demo company, password123 for everyone)
+#   2. DEV_OUTBOX=true in .env      (so step 10 can read the client's email)
+#   3. npm run dev                  (and the ML service, for steps 15-16)
 
 @base = http://localhost:5000/api
 
-### 1. Client logs in
-# @name clientLogin
+### 1. Rahul (manager) logs in
+# @name rahul
 POST {{base}}/auth/login
 Content-Type: application/json
 
-{ "email": "client@fairview.test", "password": "password123" }
+{ "email": "rahul@fairview.test", "password": "password123" }
 
-### 2. Manager logs in
-# @name managerLogin
-POST {{base}}/auth/login
-Content-Type: application/json
-
-{ "email": "manager@fairview.test", "password": "password123" }
-
-### 3. Priya (employee) logs in
-# @name priyaLogin
+### 2. Priya (employee) logs in
+# @name priya
 POST {{base}}/auth/login
 Content-Type: application/json
 
 { "email": "priya@fairview.test", "password": "password123" }
 
-### 4. Client creates a project and chooses the manager
+### 3. Neha (HR) logs in
+# @name hr
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "hr@fairview.test", "password": "password123" }
+
+### 4. Rahul creates a project. The client is a contact, not a user: they will rate by email link.
 # @name project
 POST {{base}}/projects
-Authorization: Bearer {{clientLogin.response.body.$.token}}
+Authorization: Bearer {{rahul.response.body.$.token}}
 Content-Type: application/json
 
-{ "title": "Company website", "description": "5-page site", "managerId": "{{managerLogin.response.body.$.user.id}}" }
+{ "name": "Loyalty app", "client": { "name": "Mark Ellis", "email": "mark@shopwave.example", "company": "ShopWave" } }
 
-### 5. Manager gives Priya a task worth 70% of the project
+### 5. Rahul gives Priya one piece of work (one owner per piece)
 # @name task
 POST {{base}}/tasks
-Authorization: Bearer {{managerLogin.response.body.$.token}}
+Authorization: Bearer {{rahul.response.body.$.token}}
 Content-Type: application/json
 
-{ "projectId": "{{project.response.body.$._id}}", "employeeId": "{{priyaLogin.response.body.$.user.id}}", "title": "Build pages", "workShare": 0.7 }
+{ "projectId": "{{project.response.body.$._id}}", "employeeId": "{{priya.response.body.$.user.id}}", "title": "Points balance screen" }
 
-### 6. Priya starts the task
+### 6. Priya starts it
 PATCH {{base}}/tasks/{{task.response.body.$._id}}/status
-Authorization: Bearer {{priyaLogin.response.body.$.token}}
+Authorization: Bearer {{priya.response.body.$.token}}
 Content-Type: application/json
 
 { "status": "in_progress" }
 
-### 7. Priya submits the task
+### 7. Priya submits it
 PATCH {{base}}/tasks/{{task.response.body.$._id}}/status
-Authorization: Bearer {{priyaLogin.response.body.$.token}}
+Authorization: Bearer {{priya.response.body.$.token}}
 Content-Type: application/json
 
-{ "status": "submitted", "submission": "https://github.com/example/pages" }
+{ "status": "submitted", "submission": "https://github.com/example/pull/42" }
 
-### 8. Manager tries to deliver before rating the task -> refused (409)
-POST {{base}}/projects/{{project.response.body.$._id}}/deliver
-Authorization: Bearer {{managerLogin.response.body.$.token}}
+### 8. Rahul tries to deliver before rating -> 409 (he must rate first, blind)
+POST {{base}}/tasks/{{task.response.body.$._id}}/deliver
+Authorization: Bearer {{rahul.response.body.$.token}}
 
-### 9. Manager rates the task (before delivery, so the client's score is not known yet)
-POST {{base}}/assessments
-Authorization: Bearer {{managerLogin.response.body.$.token}}
+### 9. Rahul rates it (2 stars), then delivers: the client gets a one-time rating link by email
+POST {{base}}/tasks/{{task.response.body.$._id}}/rating
+Authorization: Bearer {{rahul.response.body.$.token}}
 Content-Type: application/json
 
-{ "taskId": "{{task.response.body.$._id}}", "score": 5, "feedback": "Okay work" }
+{ "score": 2, "comment": "Took longer than planned" }
 
-### 10. Manager delivers the project
-POST {{base}}/projects/{{project.response.body.$._id}}/deliver
-Authorization: Bearer {{managerLogin.response.body.$.token}}
+###
+POST {{base}}/tasks/{{task.response.body.$._id}}/deliver
+Authorization: Bearer {{rahul.response.body.$.token}}
 
-### 11. Client rates the project (the rating is locked from now on)
-# @name rating
-POST {{base}}/ratings
-Authorization: Bearer {{clientLogin.response.body.$.token}}
+### 10. Read the email the client would get (dev only) to find the link token
+# @name outbox
+GET {{base}}/dev/outbox
+
+### 11. The client opens the link: sees the work and who built it, never the manager's score
+GET {{base}}/public/rate/{{outbox.response.body.$[0].ratingToken}}
+
+### 12. The client rates: 5 stars. No login. Locked at once.
+POST {{base}}/public/rate/{{outbox.response.body.$[0].ratingToken}}
 Content-Type: application/json
 
-{ "projectId": "{{project.response.body.$._id}}", "score": 9, "review": "Excellent, on time" }
+{ "score": 5, "comment": "Clean and on time" }
 
-### 12. Manager tries to change the client rating -> must be 403
-PATCH {{base}}/ratings/{{rating.response.body.$._id}}
-Authorization: Bearer {{managerLogin.response.body.$.token}}
+### 13. Priya now sees both ratings on her work
+# @name priyaTask
+GET {{base}}/tasks/{{task.response.body.$._id}}
+Authorization: Bearer {{priya.response.body.$.token}}
+
+### 14. Rahul tries to change the client's rating -> 403, and the attempt is logged
+PATCH {{base}}/ratings/client/{{priyaTask.response.body.$.ratings.client.id}}
+Authorization: Bearer {{rahul.response.body.$.token}}
 Content-Type: application/json
 
-{ "score": 3 }
+{ "score": 1 }
 
-### 13. Client tries to delete their own rating -> also 403
-DELETE {{base}}/ratings/{{rating.response.body.$._id}}
-Authorization: Bearer {{clientLogin.response.body.$.token}}
+### 15. HR runs the gap analysis (needs the ML service running and ML_URL set)
+POST {{base}}/gap-cards/analyse
+Authorization: Bearer {{hr.response.body.$.token}}
 
-### 14. Priya can see the client rating of the project she worked on
-GET {{base}}/ratings/project/{{project.response.body.$._id}}
-Authorization: Bearer {{priyaLogin.response.body.$.token}}
+### 16. HR's Gap Cards: in the demo company, Rahul -> Priya and Sara -> Arjun
+GET {{base}}/gap-cards?status=open
+Authorization: Bearer {{hr.response.body.$.token}}
+
+### 17. HR overview: client rating rate, per-manager averages, analysis status
+GET {{base}}/insights/overview
+Authorization: Bearer {{hr.response.body.$.token}}
+
+### 18. HR audit log: the blocked edit from step 14 is here
+GET {{base}}/insights/audit?outcome=blocked
+Authorization: Bearer {{hr.response.body.$.token}}

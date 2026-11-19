@@ -1,12 +1,13 @@
 {
   "name": "fairview-server",
-  "version": "1.0.0",
-  "description": "FairView API - role-based platform with locked client ratings",
+  "version": "2.0.0",
+  "description": "FairView API: per-piece manager and client ratings, locked records, gap analysis",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "seed": "node src/scripts/seed.js",
+    "reminders": "node src/scripts/reminders.js",
     "test": "jest"
   },
   "author": "",
@@ -14,21 +15,32 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
+    "csv-parse": "^7.0.3",
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.4",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.10.3"
+    "mongoose": "^9.12.2",
+    "nodemailer": "^10.6.0"
   },
   "devDependencies": {
     "jest": "^30.5.2",
+    "mongodb-memory-server": "^11.3.0",
     "nodemon": "^3.1.14",
     "supertest": "^7.3.1"
   },
   "jest": {
     "testEnvironment": "node",
     "setupFiles": [
-      "<rootDir>/tests/setup.js"
-    ]
+      "<rootDir>/tests/setup/env.js"
+    ],
+    "globalSetup": "<rootDir>/tests/setup/globalSetup.js",
+    "globalTeardown": "<rootDir>/tests/setup/globalTeardown.js",
+    "testTimeout": 30000
   },
-  "private": true
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
 }
