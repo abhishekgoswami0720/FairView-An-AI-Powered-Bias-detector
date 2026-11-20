@@ -4,6 +4,7 @@
 //
 //   npm run seed             add the demo company (stops if it already exists)
 //   npm run seed -- --reset  WIPE THE WHOLE DATABASE first, then add the demo company
+//   npm run demo             no database needed: see demo.js
 //
 // All demo passwords are "password123". Use this only on a local or test database.
 const bcrypt = require('bcryptjs');
@@ -96,10 +97,8 @@ const MANAGER_COMMENTS = {
 };
 const commentFor = (bank, score) => (rand() < 0.55 ? pick(score >= 4 ? bank.high : score === 3 ? bank.mid : bank.low) : undefined);
 
-async function main() {
-  const reset = process.argv.includes('--reset');
-  await connectDB(required('MONGODB_URI'));
-
+// Fills the database that mongoose is already connected to. Used by this script and by demo.js.
+async function seedDemo({ reset = false } = {}) {
   if (reset) {
     console.log(`Wiping database "${mongoose.connection.name}"...`);
     await mongoose.connection.dropDatabase();
@@ -223,9 +222,19 @@ async function main() {
   }
 }
 
-main()
-  .catch((err) => {
-    console.error(err.message);
-    process.exitCode = 1;
-  })
-  .finally(() => mongoose.disconnect());
+async function main() {
+  await connectDB(required('MONGODB_URI'));
+  await seedDemo({ reset: process.argv.includes('--reset') });
+}
+
+// Run only when started with "npm run seed", not when demo.js loads this file.
+if (require.main === module) {
+  main()
+    .catch((err) => {
+      console.error(err.message);
+      process.exitCode = 1;
+    })
+    .finally(() => mongoose.disconnect());
+}
+
+module.exports = { seedDemo };

@@ -25,7 +25,11 @@ Started as an AIML mini project at GLA University (Abhishek Goswami, 12515500018
 
 ## Run it on your laptop
 
-You need Node.js 20+, Python 3.10+ and a MongoDB Atlas database (the free tier works).
+You need Node.js 20+ and Python 3.10+.
+
+**No database? Use the demo mode.** In step 2 below, run `npm run demo` instead of `npm run seed` and `npm run dev`. It starts a temporary database on your laptop with the demo company already in it, so you need no Atlas account, no `MONGODB_URI` and no IP list. Everything is deleted when you stop it, and the first run downloads MongoDB (about 100 MB).
+
+For a real database, use MongoDB Atlas (the free tier works) and follow the steps as written.
 
 ```bash
 # 1. ML service (terminal 1)

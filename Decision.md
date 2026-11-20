@@ -80,6 +80,7 @@ How code moves between files is explained in [flow.md](flow.md).
 | D-62 | Login token kept in localStorage | Done |
 | D-63 | "Rate and send to client" in one step | Done |
 | D-64 | The client's page is built for 10 seconds on a phone | Done |
+| D-65 | `npm run demo`: a temporary database, no Atlas needed | Done |
 | PL-01 to PL-04 | Frontend, ML service, z-score, Isolation Forest | Done (D-51 to D-61) |
 | PL-05 | Sentiment check | Deferred |
 | P-01 to P-04 | Changes from the Problem and USP doc | P-01 to P-03 accepted, P-04 replaced by D-36 |
@@ -512,6 +513,13 @@ Abhishek asked for FairView to be built as a future market product, not only a c
 - **Decision:** One column, the work's name and who built it, five large stars (a keyboard-accessible radio group), a comment box that appears only after a star is chosen, and a button that says exactly what it sends ("Send 5 stars – Excellent"). Used, replaced and expired links each explain what to do.
 - **Why:** The client gains the least from FairView (Problem and USP doc), so their part must cost almost nothing.
 - **Trade-off accepted:** No space to explain FairView to the client beyond one line.
+
+### D-65 · `npm run demo`: a temporary database, no Atlas needed
+- **Status:** Done · **Date:** 2026-11-20 · **Files:** `server/src/scripts/demo.js`, `server/src/scripts/seed.js`
+- **Decision:** `npm run demo` starts a MongoDB replica set inside the server process (`mongodb-memory-server`, already used by the tests), fills it with the demo company and starts the API. Its settings win over `.env`, so the Atlas address is never touched. The seed script now exports `seedDemo()` so both commands share it.
+- **Why:** On Abhishek's laptop, Atlas refused the connection (the IP list or a blocked network port). A demo, a viva or a judge's laptop should not depend on a cloud database, an IP list or the venue's Wi-Fi.
+- **Instead of:** Asking everyone who runs the demo to set up Atlas or install MongoDB.
+- **Trade-off accepted:** Everything is deleted when the demo stops, and the first run downloads MongoDB (about 100 MB). Real use still needs `npm run dev` with a real database.
 
 ---
 

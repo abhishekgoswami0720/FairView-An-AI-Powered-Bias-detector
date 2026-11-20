@@ -33,6 +33,7 @@ In one line: **people use the React app, the app calls the API, the API checks e
 | Command (run in the folder shown) | First file that runs | What happens |
 | --- | --- | --- |
 | `server/`: `npm start` or `npm run dev` | `src/index.js` | Starts the API on port 5000 (`dev` restarts on every save) |
+| `server/`: `npm run demo` | `src/scripts/demo.js` | Starts a temporary in-memory MongoDB, creates the demo company and starts the API. No Atlas needed; all data is deleted on stop (section 13) |
 | `server/`: `npm run seed` | `src/scripts/seed.js` | Creates the demo company, then exits (section 13) |
 | `server/`: `npm run reminders` | `src/scripts/reminders.js` | Sends one reminder per unused rating link, then exits (section 13) |
 | `server/`: `npm test` | Jest → `tests/setup/globalSetup.js` | Starts an in-memory MongoDB, runs the tests (section 14) |
@@ -400,7 +401,7 @@ lib/useApi.js  useApi(path): { data, error, loading, reload } for each page
 ## 13. Scripts
 
 ```
-npm run seed [-- --reset]                        src/scripts/seed.js
+npm run seed [-- --reset]                        src/scripts/seed.js  (main → seedDemo)
 → connectDB (same 5 s limit and replica set check)
 → --reset: dropDatabase()     createIndexes() on every model
 → demo company exists already? stop
@@ -408,6 +409,13 @@ npm run seed [-- --reset]                        src/scripts/seed.js
 → build 6 months of work with a fixed random seed (biases planted for Priya and Arjun)
 → insertMany(..., { timestamps: false }) so the old dates stay
 → print logins and 3 open client rating links → runAnalysis() if ML_URL is set
+
+npm run demo                                     src/scripts/demo.js
+→ dotenv reads .env, then MongoMemoryReplSet.create() starts MongoDB inside the process
+→ MONGODB_URI set to that database (wins over .env); JWT_SECRET made up if missing; DEV_OUTBOX on
+→ only now require config/db, seed.js (seedDemo), app.js and config/env, so they read those settings
+→ connectDB → seedDemo() → app.listen(port)
+→ Ctrl+C: close the server, disconnect, stop the temporary MongoDB (everything is gone)
 
 npm run reminders                                src/scripts/reminders.js  (run once a day)
 → RatingLink: unused, not revoked, not reminded, not expired, sent > 3 days ago

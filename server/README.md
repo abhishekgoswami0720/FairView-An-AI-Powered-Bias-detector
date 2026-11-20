@@ -24,6 +24,8 @@ npm run dev                 # API at http://localhost:5000, health check at /api
 
 `npm run seed` without `--reset` adds the demo company only if it isn't there yet.
 
+**No database at all?** `npm run demo` starts a temporary MongoDB inside the server, adds the demo company and starts the API on port 5000. It ignores `MONGODB_URI`, needs nothing in `.env`, and deletes everything when you stop it (Ctrl+C). The first run downloads MongoDB (about 100 MB). Handy for demos and when Atlas can't be reached.
+
 ### Local MongoDB
 
 A plain local install is not a replica set, and the server will say so and stop. To make it one:
